@@ -7,32 +7,46 @@ from django.contrib.auth import get_user
 
 # función que devuelve un listado de cards. Cada card representa una imagen de la API de HP.
 def getAllImages():
-    # debe ejecutar los siguientes pasos:
-    # 1) traer un listado de imágenes crudas desde la API (ver transport.py)
-    # 2) convertir cada img. en una card.
-    # 3) añadirlas a un nuevo listado que, finalmente, se retornará con todas las card encontradas.
-    # ATENCIÓN: contemplar que los nombres alternativos, para cada personaje, deben elegirse al azar. Si no existen nombres alternativos, debe mostrar un mensaje adecuado.
-    pass
+    # 1) Traer los datos desde transport.py
+    raw_images = transport.getAllImages()
+    
+    json_collection = []
+
+    # 2) Convertir cada imagen en una "card" (en este caso, los mismos datos pero estructurados)
+    for obj in raw_images:
+        json_collection.append({
+            "name": obj.get("name", "Desconocido"),
+            "alternate_names": ", ".join(obj.get("alternate_names", ["Sin nombres alternativos"])),
+            "gender": obj.get("gender", "No especificado"),
+            "house": obj.get("house", "Sin casa"),
+            "actor": obj.get("actor", "No disponible"),
+            "image": obj.get("image", "https://via.placeholder.com/150")  # Imagen por defecto si falta
+        })
+
+    return json_collection
+
 
 # función que filtra según el nombre del personaje.
 def filterByCharacter(name):
     filtered_cards = []
 
-    for card in getAllImages():
-        # debe verificar si el name está contenido en el nombre de la card, antes de agregarlo al listado de filtered_cards.
-        filtered_cards.append(card)
+    for card in getAllImages():  # Obtener todas las imágenes
+        if name.lower() in card['name'].lower():  # Verificar si el nombre buscado está en el nombre del personaje
+            filtered_cards.append(card)
 
-    return filtered_cards
+    return filtered_cards  # Eliminé la parte duplicada
 
 # función que filtra las cards según su casa.
 def filterByHouse(house_name):
+    images = getAllImages() or []  # Asegura que siempre haya una lista
     filtered_cards = []
 
-    for card in getAllImages():
-        # debe verificar si la casa de la card coincide con la recibida por parámetro. Si es así, se añade al listado de filtered_cards.
-        filtered_cards.append(card)
+    for card in images:
+        if card.get("house", "").lower() == house_name.lower():  # Convertimos ambos a minúsculas
+            filtered_cards.append(card)
 
     return filtered_cards
+
 
 # añadir favoritos (usado desde el template 'home.html')
 def saveFavourite(request):
